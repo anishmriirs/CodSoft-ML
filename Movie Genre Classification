@@ -20,3 +20,17 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split 
 from sklearn.metrics import accuracy_score
+train_data = pd.read_csv("/kaggle/input/genre-classification-dataset-imdb/Genre Classification Dataset/train_data.txt", sep=':::', names=["title", "genre", "description"], engine='python')
+test_data = pd.read_csv("/kaggle/input/genre-classification-dataset-imdb/Genre Classification Dataset/test_data.txt", sep=':::', names=["title", "description"], engine='python')
+train_data.head()
+test_data.head()
+plt.figure(figsize=(30,10))
+counts = train_data.genre.value_counts()
+sns.barplot(x=counts.index, y=counts)
+plt.xlabel('Genre')
+plt.ylabel('Count')
+plt.xticks(rotation=90);
+train_data.describe()
+train_data.genre.value_counts()
+train_data.info()
+train_data.isnull().sum()
