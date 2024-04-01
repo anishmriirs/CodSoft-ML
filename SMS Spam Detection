@@ -85,3 +85,82 @@ filter.train(messages, labels)
 test_message = "Free entry in 2 a wkly comp"
 spam_probability = filter.classify(test_message)
 print("Spam probability:", spam_probability)
+import re
+
+class HeuristicSpamFilter:
+    def __init__(self):
+        self.suspicious_keywords = ['free', 'buy now', 'winner', 'guaranteed', 'act now']
+        self.spammy_patterns = [r'\b\d{4,}\b']  # Example: 4 or more consecutive digits
+        # Adding a simple regex pattern to identify URLs; this can be enhanced for more robust detection
+        self.url_pattern = r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+'
+
+    def check_keywords(self, message):
+        for keyword in self.suspicious_keywords:
+            if keyword in message.lower():
+                return True
+        return False
+
+    def check_structure(self, message):
+        for pattern in self.spammy_patterns:
+            if re.search(pattern, message):
+                return True
+        return False
+
+    def check_urls(self, message):
+        return re.search(self.url_pattern, message) is not None
+
+    def is_spam(self, message):
+        if self.check_keywords(message):
+            return 'spam'
+        if self.check_structure(message):
+            return 'spam'
+        if self.check_urls(message):
+            return 'spam'
+        return 'ham'
+filterh = HeuristicSpamFilter()
+
+# Apply the filter to classify each SMS message
+spam = messages.apply(filterh.is_spam)
+accuracy = (spam == labels).mean()
+# Display the classified messages
+print(accuracy )
+import pandas as pd
+
+class CollaborativeSpamFilter:
+    def __init__(self):
+        self.spam_reports = {}  # Dictionary to store spam reports for each message
+
+    def report_spam(self, message):
+        if message in self.spam_reports:
+            self.spam_reports[message] += 1
+        else:
+            self.spam_reports[message] = 1
+
+    def is_spam(self, message, threshold=3):
+        if message in self.spam_reports:
+            if self.spam_reports[message] >= threshold:
+                return 'spam'
+            else:
+                return 'ham'
+        return 'ham'
+
+# Example usage
+filter = CollaborativeSpamFilter()
+
+# Load the SMS spam dataset  # Update with the actual filename and path
+
+# Choose messages labeled as spam to add to the report
+spam_messages = messages[labels == 'spam']
+
+# Simulate user feedback by reporting spam messages
+for message in spam_messages:
+    filter.report_spam(message)
+
+# Apply the filter to classify messages
+isspam = messages.apply(lambda message: filter.is_spam(message))
+
+# Display the classified messages
+print(isspam)
+accuracy = (isspam == labels).mean()
+# Display the classified messages
+print(accuracy )
