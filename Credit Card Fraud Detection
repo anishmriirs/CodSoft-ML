@@ -1,1 +1,87 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from category_encoders import WOEEncoder
 
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.utils import resample
+from sklearn.svm import LinearSVC
+from sklearn.naive_bayes import GaussianNB
+
+
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+from sklearn.model_selection import train_test_split
+
+sns.set_style('whitegrid') # sets the visual style of Seaborn plots to 'whitegrid', which displays a white background with grid lines.
+sns.set_palette('pastel')  # sets the color palette to 'pastel', which is one of the predefined color palettes provided by Seaborn. It consists of a set of visually distinct colors suitable for plotting categorical data.
+
+import warnings
+# Ignore all warnings
+warnings.simplefilter("ignore")
+train_df = pd.read_csv('D:\downloads\fraudTrain.csv', index_col='Unnamed: 0')
+test_df = pd.read_csv('D:\downloads\fraudTest.csv', index_col='Unnamed: 0')
+train_df.head(3)
+train_df.info()
+train_df.shape
+is_fraud = train_df["is_fraud"].value_counts()
+print("Yes: ",is_fraud[1])
+print("No: ",is_fraud[0])
+print(train_df.isna().sum().sum())
+print(train_df.duplicated().sum())
+fig,axb = plt.subplots(ncols=2,nrows=1,figsize=(15, 8))
+
+#Gender Distribution
+explode = [0.1, 0.1]
+train_df.groupby('gender')['is_fraud'].count().plot.pie(explode=explode, autopct="%1.1f%%",ax=axb[0]);
+
+ax = sns.countplot(x="gender", hue="is_fraud", data=train_df,ax=axb[1])
+
+# Add values on top of each bar
+for p in ax.patches:
+    ax.annotate(f'{p.get_height()}', (p.get_x() + p.get_width() / 2., p.get_height()),
+                ha='center', va='center', xytext=(0, 10), textcoords='offset points')
+
+# Set labels and title
+plt.title("Distribution of Gender with Fraud Status")
+plt.xlabel("Gender")
+plt.ylabel("Count")
+
+# Show the plot
+plt.show()
+is_fraud = train_df["is_fraud"].value_counts()
+plt.figure(figsize=(10, 6))
+plt.subplot(1, 2, 1)  # Subplot for the pie chart
+plt.pie(is_fraud, labels=["No", "YES"], autopct="%0.0f%%")
+plt.title("is_fraud Counts")
+plt.tight_layout()  # Adjust layout to prevent overlapping
+plt.show()
+#Change date type from obj to datetime
+train_df['trans_date_trans_time'] = pd.to_datetime(train_df['trans_date_trans_time'],format='mixed')
+test_df['trans_date_trans_time'] = pd.to_datetime(test_df['trans_date_trans_time'],format='mixed')
+train_df['hour'] = train_df['trans_date_trans_time'].dt.hour
+test_df['hour'] = test_df['trans_date_trans_time'].dt.hour
+
+train_df['month'] = train_df['trans_date_trans_time'].dt.month
+test_df['month'] = test_df['trans_date_trans_time'].dt.month
+
+train_df.head()
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15,5), sharey=True)
+
+ax1 = sns.histplot(x='hour', data=train_df[train_df["is_fraud"] == 0],
+                   stat="density", bins=24, ax=ax1, color="orange")
+
+ax2 = sns.histplot(x='hour', data=train_df[train_df["is_fraud"] == 1],
+                   stat="density", bins=24, ax=ax2, color="green")
+
+ax1.set_title("Not Fraud")
+ax2.set_title("Fraud")
+
+ax1.set_xticks(np.arange(24)) # ticks of the day 0 -> 23
+ax2.set_xticks(np.arange(24));
