@@ -154,3 +154,68 @@ plt.xticks(downsampled_class_counts.index, ['No Fraud', 'Fraud'])
 
 plt.tight_layout() # the plots will be automatically adjusted to ensure that there is no overlap between subplots and that all elements are clearly visible.
 plt.show()
+LR_model = LogisticRegression()
+LR_model.fit(X_train, y_train)
+predict_LR = LR_model.predict(X_test)
+print(classification_report(y_test, predict_LR))
+LR_accuracy = accuracy_score(predict_LR,y_test)
+print('Logistic Regression accuracy is: {:.2f}%'.format(LR_accuracy*100))
+svm_model = LinearSVC()
+svm_model.fit(X_train, y_train)
+predict = svm_model.predict(X_test)
+
+print(classification_report(y_test, predict))
+svm_accuracy = accuracy_score(predict,y_test)
+print('SVC model accuracy is: {:.2f}%'.format(svm_accuracy*100))
+# Create and train the Gaussian Naive Bayes model
+NB_model = GaussianNB()
+NB_model.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred_naive = NB_model.predict(X_test)
+
+# Evaluate the model
+print(classification_report(y_test, y_pred_naive))
+GaussianNB_accuracy = accuracy_score(y_pred_naive, y_test)
+print('Naive Bayes model accuracy is: {:.2f}%'.format(GaussianNB_accuracy * 100))
+DT = DecisionTreeClassifier(max_depth=(1), random_state=0)
+DT.fit(X_train, y_train)
+predict_ID3 = DT.predict(X_test)
+print(classification_report(y_test, predict_ID3))
+ID3_accuracy = accuracy_score(predict_ID3,y_test)
+print('ID3 model accuracy is: {:.2f}%'.format(ID3_accuracy*100))
+# Initialize and train the Random Forest classifier
+RF = RandomForestClassifier(n_estimators=100, random_state=0)
+RF.fit(X_train, y_train)
+
+predict_RF = RF.predict(X_test)
+
+# Evaluate the model
+print(classification_report(y_test, predict_RF))
+RF_accuracy = accuracy_score(predict_RF, y_test)
+print('Random Forest model accuracy is: {:.2f}%'.format(RF_accuracy * 100))
+# Initialize and train the XGBoost classifier
+XGB = XGBClassifier(random_state=0)
+XGB.fit(X_train, y_train)
+
+# Make predictions on the test set
+predict_XGB = XGB.predict(X_test)
+
+# Evaluate the model
+print(classification_report(y_test, predict_XGB))
+XGB_accuracy = accuracy_score(predict_XGB, y_test)
+print('XGBoost model accuracy is: {:.2f}%'.format(XGB_accuracy * 100))
+Algorithms = ['XGBClassifier', 'RandomForest', 'ID3', 'Logistic Regression', 'SVC', 'GaussianNB']
+accuracy = [XGB_accuracy, RF_accuracy, ID3_accuracy, LR_accuracy, svm_accuracy, GaussianNB_accuracy]
+
+FinalResult=pd.DataFrame({'Algorithm':Algorithms, 'Accuracy':accuracy})
+plt.figure(figsize=(7, 5))
+plt.bar(FinalResult['Algorithm'], FinalResult['Accuracy'], color='skyblue')
+plt.xlabel('Algorithm')
+plt.ylabel('Accuracy')
+plt.title('Accuracy of Different Algorithms')
+plt.ylim(0, 1)  # Set the limit of y-axis from 0 to 1 (accuracy ranges from 0 to 1)
+plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
+plt.grid(axis='x')  # Add gridlines only along the x-axis
+plt.tight_layout()  # Adjust layout to prevent clipping of labels
+plt.show()
