@@ -85,3 +85,72 @@ ax2.set_title("Fraud")
 
 ax1.set_xticks(np.arange(24)) # ticks of the day 0 -> 23
 ax2.set_xticks(np.arange(24));
+unique_transaction_count = len(train_df['trans_num'].unique())
+print("Total count of unique transaction numbers:", unique_transaction_count)
+# remove non-useful columns
+columns_to_drop = ['first', 'unix_time', 'dob', 'cc_num', 'zip', 'city','street', 'state', 'trans_num', 'trans_date_trans_time']
+train_df = train_df.drop(columns_to_drop, axis=1)
+test_df = test_df.drop(columns_to_drop, axis=1)
+train_df.head(2)
+#clean merchant column
+train_df['merchant'] = train_df['merchant'].apply(lambda x : x.replace('fraud_',''))
+train_df.info()
+train_df.head(2)
+train_df.describe(include='object')
+# applying label encoding
+train_df['gender'] = train_df['gender'].map({'F': 0, 'M': 1})
+
+# applying WOE encoding
+for col in ['job','merchant', 'category', 'lat', 'last']:
+    train_df[col] = WOEEncoder().fit_transform(train_df[col],train_df['is_fraud'])
+train_df.head(3)
+No_class = train_df[train_df["is_fraud"]==0]
+yes_class = train_df[train_df["is_fraud"]==1]
+
+No_class = resample(No_class, replace=False, n_samples=len(yes_class))
+down_samples = pd.concat([yes_class, No_class], axis=0)
+
+
+X = down_samples.drop("is_fraud", axis=1)
+y = down_samples["is_fraud"]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=65)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+# Count the occurrences of each class in the original dataset
+original_class_counts = train_df["is_fraud"].value_counts()
+
+# Count the occurrences of each class in the downsampled dataset
+downsampled_class_counts = down_samples["is_fraud"].value_counts()
+
+# Calculate the percentage of each class
+original_percentages = original_class_counts / len(train_df) * 100
+downsampled_percentages = downsampled_class_counts / len(down_samples) * 100
+
+# Plotting
+plt.figure(figsize=(12, 6))
+
+# Bar chart for original class distribution
+plt.subplot(1, 2, 1)
+bars_1 = plt.bar(original_class_counts.index, original_class_counts.values, color=['orange', 'green'])
+for bar, label in zip(bars_1, original_percentages):
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 5, f'{label:.2f}%', ha='center', va='bottom')
+plt.title('Original Class Distribution')
+plt.xlabel('Class')
+plt.ylabel('Count')
+plt.xticks(original_class_counts.index, ['No Fraud', 'Fraud'])
+
+# Bar chart for downsampled class distribution
+plt.subplot(1, 2, 2)
+bars_2 = plt.bar(downsampled_class_counts.index, downsampled_class_counts.values, color=['orange', 'green'])
+for bar, label in zip(bars_2, downsampled_percentages):
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 5, f'{label:.2f}%', ha='center', va='bottom')
+plt.title('Downsampled Class Distribution')
+plt.xlabel('Class')
+plt.ylabel('Count')
+plt.xticks(downsampled_class_counts.index, ['No Fraud', 'Fraud'])
+
+plt.tight_layout() # the plots will be automatically adjusted to ensure that there is no overlap between subplots and that all elements are clearly visible.
+plt.show()
