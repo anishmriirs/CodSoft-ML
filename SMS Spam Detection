@@ -1,1 +1,87 @@
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import numpy as np 
+import pandas as pd
+import re
+from collections import defaultdict
+from math import log, exp
+import nltk
+from math import *
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
 
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+# Load the dataset
+spam_data = pd.read_csv('/kaggle/input/sms-spam-collection-dataset/spam.csv',encoding = 'latin-1')
+
+# Display the first few rows of the dataframe
+display(spam_data.head())
+
+# Display basic information about the dataset
+print(spam_data.info())
+data= spam_data.drop_duplicates(keep='first')
+data.duplicated().sum()
+
+def clean_text(text):
+    clean = re.sub('[^a-zA-Z]', ' ', text) # Replacing all non-alphabetic characters with a space
+    clean = clean.lower() # converting to lowecase
+    clean = clean.split() # splits the cleaned text sms into a list of words
+    clean = ' '.join(clean) # joins the list of words back into a string, using a single space as the separator between the words
+    return clean
+
+data.loc[:, "Clean_Text"] = data["v2"].apply(clean_text)
+messages = spam_data['v2']
+labels = spam_data['v1']
+class BayesianSpamFilter:
+    def __init__(self):
+        self.spam_word_counts = defaultdict(int)
+        self.ham_word_counts = defaultdict(int)
+        self.total_spam_words = 0
+        self.total_ham_words = 0
+        self.total_spam_messages = 0
+        self.total_ham_messages = 0
+
+    def train(self, messages, labels):
+        for message, label in zip(messages, labels):
+            words = self.extract_words(message)
+            if label == 'spam':
+                self.total_spam_messages += 1
+                for word in words:
+                    self.spam_word_counts[word] += 1
+                    self.total_spam_words += 1
+            else:
+                self.total_ham_messages += 1
+                for word in words:
+                    self.ham_word_counts[word] += 1
+                    self.total_ham_words += 1
+
+    def extract_words(self, message):
+        return re.findall(r'\b\w+\b', message.lower())
+
+    def calculate_word_probabilities(self, message):
+        words = self.extract_words(message)
+        log_spam_probability = log(self.total_spam_messages / (self.total_spam_messages + self.total_ham_messages))
+        log_ham_probability = log(self.total_ham_messages / (self.total_spam_messages + self.total_ham_messages))
+        for word in words:
+            # Laplace smoothing
+            spam_word_probability = (self.spam_word_counts[word] + 1) / (self.total_spam_words + 2)
+            ham_word_probability = (self.ham_word_counts[word] + 1) / (self.total_ham_words + 2)
+            log_spam_probability += log(spam_word_probability)
+            log_ham_probability += log(ham_word_probability)
+        return log_spam_probability, log_ham_probability
+
+    def classify(self, message):
+        log_spam_probability, log_ham_probability = self.calculate_word_probabilities(message)
+        # Calculate spam probability using the logistic function on the difference of log probabilities
+        # to get a probability between 0 and 1
+        probability_difference = log_spam_probability - log_ham_probability
+        spam_probability = 1 / (1 + exp(-probability_difference))
+        return spam_probability
+filter = BayesianSpamFilter()
+filter.train(messages, labels)
+test_message = "Free entry in 2 a wkly comp"
+spam_probability = filter.classify(test_message)
+print("Spam probability:", spam_probability)
