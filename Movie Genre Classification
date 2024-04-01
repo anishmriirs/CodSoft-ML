@@ -1,0 +1,22 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import re  # for pattern matching and text manipulation.
+import string 
+import nltk 
+from sklearn.preprocessing import LabelEncoder
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer as CV
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split 
+from sklearn.metrics import accuracy_score
